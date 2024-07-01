@@ -23,7 +23,6 @@ jobs:
       run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ec2-user@${{ secrets.INSTANCE_PUBLIC_IP }} << 'EOF'
             cd /var/www/html/LoudBalanceApp-1
-            sudo chown -R $USER .git
             git pull origin main
             sudo cp index.html /var/www/html/index.html
             sudo systemctl restart httpd
