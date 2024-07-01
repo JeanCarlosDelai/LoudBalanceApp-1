@@ -13,30 +13,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    # - name: Set up Node.js
-    #   uses: actions/setup-node@v2
-    #   with:
-    #     node-version: '14'
-
-    # - name: Install dependencies
-    #   run: npm install
-
-    # - name: Build the project
-    #   run: npm run build
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Add SSH key
+    - name: Update and Restart HTTPD
       run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-
-    - name: Deploy to EC2
-      run: |
-        ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ec2-user@${{ secrets.INSTANCE_PUBLIC_IP }} "cd /var/www/html/LoudBalanceApp-1 && git pull origin main && sudo cp index.html /var/www/html/index.html && sudo systemctl restart httpd"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ec2-user@${{ secrets.INSTANCE_PUBLIC_IP }} << 'EOF'
+            cd /var/www/html/LoudBalanceApp-1
+            git config --global --add safe.directory /var/www/html/LoudBalanceApp-1
+            git pull origin main
+            sudo cp index.html /var/www/html/index.html
+            sudo systemctl restart httpd
+          EOF
